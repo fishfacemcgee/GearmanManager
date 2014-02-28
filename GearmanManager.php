@@ -891,6 +891,7 @@ abstract class GearmanManager {
             $workersGroupedByHost[$host][] = $worker_name;
         }
 
+        // Perhaps begin $workersGroupedByHost loop here
         $pid = pcntl_fork();
 
         switch($pid) {
