@@ -879,6 +879,18 @@ abstract class GearmanManager {
                                     (int) $this->config['functions'][$worker_name]['timeout'] : $default_timeout);
         }
 
+        $workersGroupedByHost = array();
+        // split the worker_list into groups based on host
+        foreach ($worker_list as $worker_name) {
+            $host = 'default';
+
+            if (isset($this->config['functions'][$worker_name]['host'])) {
+                $host = $this->config['functions'][$worker_name]['host'];
+            }
+
+            $workersGroupedByHost[$host][] = $worker_name;
+        }
+
         $pid = pcntl_fork();
 
         switch($pid) {
@@ -891,23 +903,26 @@ abstract class GearmanManager {
 
                 $this->pid = getmypid();
 
-                if(count($worker_list) > 1){
-
-                    // shuffle the list to avoid queue preference
-                    shuffle($worker_list);
-
-                    // sort the shuffled array by priority
-                    uasort($worker_list, array($this, "sort_priority"));
-                }
-
                 if($this->worker_restart_splay > 0){
                     $this->max_run_time = (int)rand($this->config['max_worker_lifetime'], $this->config['max_worker_lifetime'] + $this->worker_restart_splay);
                     $this->log("Adjusted max run time to $this->max_run_time seconds", GearmanManager::LOG_LEVEL_DEBUG);
                 }
 
-                $this->start_lib_worker($worker_list, $timeouts);
+                foreach ($workersGroupedByHost as $host => $workerGroup) {
 
-                $this->log("Child exiting", GearmanManager::LOG_LEVEL_WORKER_INFO);
+                    if(count($workerGroup) > 1){
+
+                        // shuffle the list to avoid queue preference
+                        shuffle($workerGroup);
+
+                        // sort the shuffled array by priority
+                        uasort($workerGroup, array($this, "sort_priority"));
+                    }
+
+                    $this->start_lib_worker($workerGroup, $timeouts, $host);
+
+                    $this->log("Child exiting", GearmanManager::LOG_LEVEL_WORKER_INFO);
+                }
 
                 exit();
 

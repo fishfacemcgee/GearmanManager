@@ -27,7 +27,7 @@ class GearmanPeclManager extends GearmanManager {
      * @return  void
      *
      */
-    protected function start_lib_worker($worker_list, $timeouts = array()) {
+    protected function start_lib_worker($worker_list, $timeouts = array(), $host = 'default') {
 
         $thisWorker = new GearmanWorker();
 
@@ -39,9 +39,14 @@ class GearmanPeclManager extends GearmanManager {
 
         $thisWorker->setTimeout(5000);
 
-        foreach($this->servers as $s){
-            $this->log("Adding server $s", GearmanManager::LOG_LEVEL_WORKER_INFO);
-            $thisWorker->addServers($s);
+        if ($host === 'default') { 
+            foreach($this->servers as $s){
+                $this->log("Adding server $s", GearmanManager::LOG_LEVEL_WORKER_INFO);
+                $thisWorker->addServers($s);
+            }
+        } else {
+            $this->log("Adding server $host", GearmanManager::LOG_LEVEL_WORKER_INFO);
+            $thisWorker->addServers($host);
         }
 
         foreach($worker_list as $w){
