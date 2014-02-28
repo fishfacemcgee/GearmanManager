@@ -31,7 +31,11 @@ class GearmanPeclManager extends GearmanManager {
 
         $thisWorker = new GearmanWorker();
 
-        $thisWorker->addOptions(GEARMAN_WORKER_NON_BLOCKING);
+        // This option causes gearman to throw an error
+        // php: libgearman/universal.cc:616: bool gearman_request_option(gearman_universal_st&, gearman_string_t&): Assertion `con->recv_state == GEARMAN_CON_RECV_UNIVERSAL_NONE' failed.
+        // This is apparently a PECL extension issue and may be resolved in 1.1.1+
+        // We're currently running 1.0.2 on this machine
+        //$thisWorker->addOptions(GEARMAN_WORKER_NON_BLOCKING);
 
         $thisWorker->setTimeout(5000);
 
